@@ -1,5 +1,7 @@
 package de.olafj.springws;
 
+import java.util.StringJoiner;
+
 public class Message {
     private String from;
     private String to;
@@ -33,5 +35,14 @@ public class Message {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", Message.class.getSimpleName() + "[", "]")
+                .add("from='" + from + "'")
+                .add("to='" + to + "'")
+                .add("content='" + content + "'")
+                .toString();
     }
 }

@@ -34,13 +34,13 @@ public class Socket {
     }
 
     @OnOpen
-    public void onOpen(
-            Session session,
-            @PathParam("username") String username) throws IOException {
+    public void onOpen(Session session, @PathParam("username") String username) throws IOException {
 
         this.session = session;
         chatEndpoints.add(this);
         users.put(session.getId(), username);
+
+        LOG.debug("new session (id: {}) for user: {}", session.getId(), username);
 
         Message message = new Message();
         message.setFrom(session.getId());
@@ -53,6 +53,9 @@ public class Socket {
             throws IOException {
 
         message.setFrom(session.getId());
+
+        LOG.debug("new message from session (id: {}): {}", session.getId(), message);
+
         broadcast(message);
     }
 
@@ -60,7 +63,13 @@ public class Socket {
     public void onClose(Session session) throws IOException {
 
         chatEndpoints.remove(this);
+
+        var username = users.get(session.getId());
+
         users.remove(session.getId());
+
+        LOG.debug("closed session (id: {}) for user: {}", session.getId(), username);
+
         Message message = new Message();
         message.setFrom(session.getId());
         message.setContent("Disconnected!");
@@ -81,6 +90,7 @@ public class Socket {
         chatEndpoints.stream().filter(socket -> userSessions.contains(socket.session.getId())).forEach(socket -> {
             synchronized (socket) {
                 try {
+                    LOG.debug("sending message for {} via session {} # {}", message.getTo(), socket.session.getId(), message);
                     socket.session.getBasicRemote().sendObject(message);
                 } catch (IOException | EncodeException e) {
                     e.printStackTrace();
